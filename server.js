@@ -58,7 +58,7 @@ function handleMessage(sender, msg) {
     // Control PC pushes full state → forward to outputs, executors, remotes
     case 'full-state':
       latestState = msg;
-      broadcast(msg, sender, ['output', 'executor', 'remote']);
+      broadcast(msg, sender, ['output', 'executor', 'remote', 'status']);
       break;
 
     // Cue list update → forward to remotes and executors

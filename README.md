@@ -91,6 +91,14 @@ Open `http://localhost:5173` in your browser.
 5. Fader strip on the right for intensity, BPM, and fade time.
 6. Works over the network via WebSocket — run on a tablet as a dedicated control surface.
 
+### Network status page
+
+Open `/status.html` (or click **Status** in the toolbar) to see all connected devices, test connections, and debug your setup.
+
+- Live device list — see every connected control, output, remote, and executor
+- Connection tests — WebSocket, BroadcastChannel, latency measurement
+- Quick actions — flash all outputs, identify screens, blackout test
+
 ### Multi-machine setup (WebSocket)
 
 For running the output on a separate machine (media server):
@@ -107,6 +115,73 @@ npm run server   # WebSocket server (port 9100)
 On the media server machine, open `http://<control-pc-ip>:5173/output.html` in Chrome kiosk mode. The output window will connect via WebSocket automatically.
 
 Remote controls, executors, and output windows on other machines all communicate through the WebSocket server on port 9100.
+
+### Example: event with projector + WiFi displays
+
+A typical event setup with one projector server and multiple wireless displays (CleverTouch, info TV, etc.):
+
+```
+                         ┌─────────────────────────────┐
+                         │        CONTROL PC            │
+                         │  (MacBook / laptop)          │
+                         │                              │
+                         │  npm run dev    → :5173      │
+                         │  npm run server → :9100      │
+                         │  Editor UI on built-in screen│
+                         └──────────┬────────────────────┘
+                                    │ CAT6
+                              ┌─────┴─────┐
+                              │  SWITCH   │
+                              └──┬─────┬──┘
+                  CAT6 ┌────────┘     └────────┐ CAT6
+                       │                       │
+            ┌──────────┴──────────┐   ┌────────┴──────────┐
+            │   MEDIA SERVER      │   │   WIFI ROUTER     │
+            │   (Linux/NUC/RPi)   │   │   (local network) │
+            │                     │   │   192.168.1.0/24   │
+            │   Chrome kiosk:     │   └────────┬──────────┘
+            │   /output.html      │            │ WiFi
+            │        │            │     ┌──────┼──────────┐
+            │        │ HDMI       │     │      │          │
+            └────────┼────────────┘     │      │          │
+                     │               ┌──┴──┐ ┌─┴───┐ ┌───┴──┐
+              ┌──────┴──────┐       │ TV 1│ │TV 2 │ │TV 3  │
+              │  PROJECTOR  │       │     │ │     │ │      │
+              │  (wall/     │       │info │ │lobby│ │stage │
+              │   ceiling)  │       │     │ │     │ │      │
+              └─────────────┘       └─────┘ └─────┘ └──────┘
+                                    Chrome: /output.html
+                                    (each TV = own browser)
+```
+
+**Setup steps:**
+
+1. Connect control PC to switch via Ethernet
+2. Connect media server (projector) to switch via Ethernet
+3. Connect WiFi router to switch via Ethernet
+4. All devices are now on the same network
+
+**On control PC:**
+```bash
+cd projection-mapper
+npm run dev &       # Vite on port 5173
+npm run server      # WebSocket on port 9100
+```
+
+**On media server (projector):**
+```bash
+# Autostart Chrome in kiosk mode pointing to control PC
+chromium --kiosk --app=http://192.168.1.100:5173/output.html
+```
+
+**On each WiFi display (CleverTouch / info TV / smart TV):**
+Open Chrome and navigate to `http://192.168.1.100:5173/output.html` → press F11 for fullscreen.
+
+**On phone (cue control):**
+Open `http://192.168.1.100:5173/remote.html` on any phone connected to the WiFi.
+
+**Verify everything works:**
+Open `http://192.168.1.100:5173/status.html` — you should see all devices listed. Use "Flash All" to confirm every display is receiving.
 
 ### Keyboard shortcuts
 

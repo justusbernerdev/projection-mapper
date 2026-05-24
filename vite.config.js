@@ -9,6 +9,7 @@ export default defineConfig({
         output: resolve(__dirname, 'output.html'),
         remote: resolve(__dirname, 'remote.html'),
         executor: resolve(__dirname, 'executor.html'),
+        status: resolve(__dirname, 'status.html'),
       },
     },
   },

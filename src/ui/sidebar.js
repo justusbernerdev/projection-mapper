@@ -50,6 +50,9 @@ export function initSidebar() {
   document.getElementById('tb-executor')?.addEventListener('click', () => {
     window.open('/executor.html', 'projection-executor', 'width=900,height=600');
   });
+  document.getElementById('tb-status')?.addEventListener('click', () => {
+    window.open('/status.html', 'projection-status', 'width=1000,height=700');
+  });
   document.getElementById('tb-blackout')?.addEventListener('click', () => {
     state.blackout = !state.blackout;
     renderSidebar();
