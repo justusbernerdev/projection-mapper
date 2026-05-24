@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Projection Remote</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #111;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .container {
+      max-width: 400px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    h1 {
+      font-size: 16px;
+      color: #888;
+      text-align: center;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .big-btn {
+      display: block;
+      width: 100%;
+      padding: 24px;
+      margin-bottom: 8px;
+      border: none;
+      border-radius: 8px;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.1s;
+      color: #fff;
+    }
+    .big-btn:active {
+      transform: scale(0.97);
+      opacity: 0.8;
+    }
+    .btn-go {
+      background: #0a0;
+      font-size: 28px;
+      padding: 32px;
+    }
+    .btn-prev { background: #444; }
+    .btn-next { background: #444; }
+    .btn-blackout { background: #c00; }
+    .btn-restore { background: #07a; }
+    .nav-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .nav-row .big-btn { flex: 1; }
+    .cue-display {
+      text-align: center;
+      padding: 20px;
+      margin-bottom: 12px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .cue-display .cue-number {
+      font-size: 48px;
+      font-weight: bold;
+      color: #0b4;
+    }
+    .cue-display .cue-name {
+      font-size: 18px;
+      color: #aaa;
+      margin-top: 4px;
+    }
+    .cue-list {
+      margin-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 12px;
+    }
+    .cue-list h2 {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+    .cue-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 4px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.05);
+      cursor: pointer;
+      font-size: 15px;
+    }
+    .cue-item:active {
+      background: rgba(255,255,255,0.15);
+    }
+    .cue-item.active {
+      background: rgba(0, 200, 80, 0.15);
+      border: 1px solid rgba(0, 200, 80, 0.3);
+    }
+    .cue-item .num {
+      width: 30px;
+      color: #666;
+      font-weight: bold;
+    }
+    .status {
+      text-align: center;
+      font-size: 11px;
+      color: #444;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Remote Control</h1>
+    <div class="cue-display">
+      <div class="cue-number" id="cue-num">—</div>
+      <div class="cue-name" id="cue-name">No cue active</div>
+    </div>
+    <button class="big-btn btn-go" id="btn-go-next">GO NEXT</button>
+    <div class="nav-row">
+      <button class="big-btn btn-prev" id="btn-prev">PREV</button>
+      <button class="big-btn btn-next" id="btn-next">NEXT</button>
+    </div>
+    <div class="nav-row">
+      <button class="big-btn btn-blackout" id="btn-blackout">BLACKOUT</button>
+      <button class="big-btn btn-restore" id="btn-restore">RESTORE</button>
+    </div>
+    <div class="cue-list">
+      <h2>Cue List</h2>
+      <div id="cue-items"></div>
+    </div>
+    <div class="status" id="status">Connecting...</div>
+  </div>
+
+  <script type="module">
+    const channel = new BroadcastChannel('projection-mapper');
+
+    let cues = [];
+    let activeCueIndex = -1;
+
+    // Request state
+    channel.postMessage({ type: 'remote-request-cues' });
+
+    channel.onmessage = (e) => {
+      const msg = e.data;
+      if (msg.type === 'cue-list-update') {
+        cues = msg.cues;
+        activeCueIndex = msg.activeCueIndex;
+        renderCues();
+        document.getElementById('status').textContent = 'Connected';
+      } else if (msg.type === 'cue-change') {
+        activeCueIndex = msg.index;
+        renderCues();
+      }
+    };
+
+    document.getElementById('btn-go-next').addEventListener('click', () => {
+      channel.postMessage({ type: 'remote-go-next' });
+    });
+    document.getElementById('btn-prev').addEventListener('click', () => {
+      channel.postMessage({ type: 'remote-go-prev' });
+    });
+    document.getElementById('btn-next').addEventListener('click', () => {
+      channel.postMessage({ type: 'remote-go-next' });
+    });
+    document.getElementById('btn-blackout').addEventListener('click', () => {
+      channel.postMessage({ type: 'remote-blackout' });
+    });
+    document.getElementById('btn-restore').addEventListener('click', () => {
+      channel.postMessage({ type: 'remote-restore' });
+    });
+
+    function renderCues() {
+      const numEl = document.getElementById('cue-num');
+      const nameEl = document.getElementById('cue-name');
+      const listEl = document.getElementById('cue-items');
+
+      if (activeCueIndex >= 0 && cues[activeCueIndex]) {
+        numEl.textContent = activeCueIndex + 1;
+        nameEl.textContent = cues[activeCueIndex].name;
+      } else {
+        numEl.textContent = '—';
+        nameEl.textContent = 'No cue active';
+      }
+
+      listEl.innerHTML = cues.map((cue, i) => `
+        <div class="cue-item ${i === activeCueIndex ? 'active' : ''}" data-index="${i}">
+          <span class="num">${i + 1}</span>
+          <span>${cue.name}</span>
+        </div>
+      `).join('');
+
+      for (const item of listEl.querySelectorAll('.cue-item')) {
+        item.addEventListener('click', () => {
+          channel.postMessage({ type: 'remote-goto-cue', index: parseInt(item.dataset.index) });
+        });
+      }
+    }
+
+    // Poll for cue state
+    setInterval(() => {
+      channel.postMessage({ type: 'remote-request-cues' });
+    }, 1000);
+  </script>
+</body>
+</html>
