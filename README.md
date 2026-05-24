@@ -29,6 +29,9 @@ Built with vanilla JavaScript and Vite. No frameworks, no build dependencies bey
 ### Remote control — phone interface for cue navigation
 ![Remote control](docs/screenshot-remote.png)
 
+### Network status — device list, connection tests, diagnostics
+![Network status](docs/screenshot-status.png)
+
 ## System architecture
 
 ![Architecture diagram](docs/architecture.svg)
