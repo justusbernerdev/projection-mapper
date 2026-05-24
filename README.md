@@ -6,6 +6,29 @@ Built with vanilla JavaScript and Vite. No frameworks, no build dependencies bey
 
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 
+## Screenshots
+
+### Edit mode — surface mapping with grid overlay
+![Edit mode](docs/screenshot-edit-mode.png)
+
+### Test patterns — calibration with checkerboard
+![Test patterns](docs/screenshot-test-pattern.png)
+
+### Multi-surface — mapping multiple areas
+![Multi-surface](docs/screenshot-multi-surface.png)
+
+### Program mode — live scene control with keyboard shortcuts
+![Program mode](docs/screenshot-program-mode.png)
+
+### Executor — GrandMA-style button grid (scenes)
+![Executor main](docs/screenshot-executor-main.png)
+
+### Executor — FX page (overlays and effects)
+![Executor FX](docs/screenshot-executor-fx.png)
+
+### Remote control — phone interface for cue navigation
+![Remote control](docs/screenshot-remote.png)
+
 ## System architecture
 
 ![Architecture diagram](docs/architecture.svg)
