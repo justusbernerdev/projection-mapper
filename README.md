@@ -55,6 +55,32 @@ Open `http://localhost:5173` in your browser.
 1. Click **Open Remote Control** in the sidebar.
 2. A small window opens — navigate cues, trigger blackout, and go live from your phone or second screen.
 
+### Executor (GrandMA-style)
+
+1. Click **Executor** in the toolbar (or open `/executor.html` directly).
+2. A grid of programmable buttons — each can trigger a scene, overlay, or cue.
+3. Click **Edit** to customize buttons: assign scenes, overlays, cues, blackout, or restore.
+4. Multiple pages — swipe between Main, FX, and custom pages.
+5. Fader strip on the right for intensity, BPM, and fade time.
+6. Works over the network via WebSocket — run on a tablet as a dedicated control surface.
+
+### Multi-machine setup (WebSocket)
+
+For running the output on a separate machine (media server):
+
+```bash
+# On control PC — start both Vite and WebSocket server
+npm start
+
+# Or separately:
+npm run dev      # Vite dev server (port 5173)
+npm run server   # WebSocket server (port 9100)
+```
+
+On the media server machine, open `http://<control-pc-ip>:5173/output.html` in Chrome kiosk mode. The output window will connect via WebSocket automatically.
+
+Remote controls, executors, and output windows on other machines all communicate through the WebSocket server on port 9100.
+
 ### Keyboard shortcuts
 
 | Key | Action |
@@ -90,6 +116,9 @@ src/
   overlays.js         # Overlay effects (wipes, flashes, sparkles)
   stageScale.js       # Viewport zoom, pan, fit-to-container
   outputWindow.js     # Output window management
+  transport.js        # Unified BroadcastChannel + WebSocket transport
+  midi.js             # MIDI controller input (Web MIDI API)
+  server.js           # Node.js WebSocket server (root level)
 
   content/
     animation.js      # 40+ generative animation presets
@@ -132,20 +161,129 @@ All surfaces live in a **1920 x 1080** coordinate space regardless of window siz
 - **Auto-save** — checks for changes every second, saves with 500ms debounce.
 - **JSON export/import** for backup and sharing.
 
+## Hardware setup
+
+### How many outputs?
+
+There is **no hard limit** on the number of outputs. Each output is a separate browser window that can be placed on any connected display.
+
+| Setup | Outputs | Description |
+|-------|---------|-------------|
+| **Minimal** | 1 | One laptop, one projector (HDMI/USB-C) |
+| **Dual** | 2 | Two projectors from one machine |
+| **Multi-machine** | Unlimited | Each media server runs one or more outputs, connected via LAN |
+
+### Recommended hardware
+
+**Control PC (operator)**
+- Any laptop/desktop running Chrome
+- Display for the editor UI
+- Optional: MIDI controller, second screen for executor
+
+**Media server (per projector)**
+- Any machine with HDMI out (Raspberry Pi 4/5, Intel NUC, old laptop, etc.)
+- Chrome in kiosk mode: `chromium --kiosk --app=http://<control-ip>:5173/output.html`
+- Connected to control PC via Ethernet (CAT5/6)
+
+**Network**
+- Ethernet switch connecting control PC + media servers (wired = reliable)
+- WiFi router for phone/tablet remote controls
+- All devices on the same subnet
+
+### Example setups
+
+**Small event (1 projector)**
+```
+[Laptop] ──HDMI──> [Projector]
+   └── Chrome: editor + output on extended display
+```
+
+**Medium event (2-3 projectors)**
+```
+[Control PC] ──Ethernet──> [Switch] ──> [Media Server 1] ──HDMI──> [Projector 1]
+                              ├──────> [Media Server 2] ──HDMI──> [Projector 2]
+                              └──WiFi──> [Phone: Remote Control]
+```
+
+**Large event (4+ projectors)**
+```
+[Control PC] ──Ethernet──> [Switch] ──> [Media Server 1] ──HDMI──> [Projector 1]
+   ├── Executor (tablet)       ├──────> [Media Server 2] ──HDMI──> [Projector 2]
+   ├── MIDI controller         ├──────> [Media Server 3] ──HDMI──> [Projector 3]
+   └── WebSocket server        ├──────> [Media Server 4] ──HDMI──> [Projector 4]
+                               └──WiFi──> [Phone 1: Remote]
+                                          [Phone 2: Remote]
+```
+
+### Media server deployment
+
+On each media server machine:
+
+```bash
+# Option A: Open output directly from control PC's Vite server
+chromium --kiosk --app=http://192.168.1.100:5173/output.html
+
+# Option B: Build and serve static files locally
+npm run build
+# Copy dist/ to media server, serve with any HTTP server
+npx serve dist
+```
+
+The output page automatically connects to the WebSocket server for state updates. If WebSocket is unavailable, it falls back to BroadcastChannel (same-machine only).
+
+### MIDI controller
+
+Any class-compliant USB MIDI controller works via the Web MIDI API. No drivers needed.
+
+**Tested controllers:**
+- Akai APC Mini / APC40 (pad grid maps well to scenes)
+- Novation Launchpad (8x8 grid for scenes + overlays)
+- Korg nanoKONTROL2 (faders for BPM, opacity, brightness)
+- Any generic MIDI controller with pads/buttons
+
+**Default MIDI mapping:**
+
+| MIDI Note | Action |
+|-----------|--------|
+| 36-51 | Scenes (Magic Reveal, Glitter Rain, Waves, etc.) |
+| 52-55 | Overlays (Flash White, Flash Gold, Boom, Wipe) |
+| 56 | Blackout |
+| 57 | Restore |
+| 58 | Next cue |
+| 59 | Previous cue |
+
+| MIDI CC | Action |
+|---------|--------|
+| CC 1 (Mod wheel) | BPM (40-200) |
+| CC 7 (Volume) | Master opacity |
+| CC 11 (Expression) | Master brightness |
+
+Connect your MIDI controller via USB, open the app in Chrome, and it auto-detects. The mapping is stored in localStorage and can be customized.
+
+**Note:** Web MIDI requires Chrome or Edge. Firefox and Safari do not support it.
+
 ## Configuration
 
 The output resolution is 1920x1080 by default. To change it, update the constants in `src/stageScale.js` and `src/surface.js`.
 
 ## Browser support
 
-Requires a modern browser with support for:
-- `BroadcastChannel` (Chrome, Firefox, Edge)
-- `CSS matrix3d` transforms
-- `Canvas 2D` context
-- `IndexedDB`
-- `Fullscreen API`
+| Feature | Chrome | Firefox | Edge | Safari |
+|---------|--------|---------|------|--------|
+| Core editor | Yes | Yes | Yes | Yes |
+| BroadcastChannel (local output) | Yes | Yes | Yes | Partial |
+| WebSocket (network output) | Yes | Yes | Yes | Yes |
+| Web MIDI (controllers) | Yes | No | Yes | No |
+| Fullscreen API | Yes | Yes | Yes | Yes |
 
-Safari has limited `BroadcastChannel` support — output windows and remote control may not work.
+For the best experience, use **Chrome** on all machines.
+
+## Ports
+
+| Port | Service |
+|------|---------|
+| 5173 | Vite dev server (HTTP) |
+| 9100 | WebSocket server (configurable via `PORT` env var) |
 
 ## License
 

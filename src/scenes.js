@@ -11,6 +11,13 @@ export const scenePresets = {
   blinderFlash: { name: 'Blinder',       animation: 'blinderFlash', color: '#ffffcc', category: 'show' },
   laserText:    { name: 'Laser Text',    animation: 'laserText',    color: '#00ff88', category: 'show' },
   wipeReveal:   { name: 'Wipe',         animation: 'wipeReveal',   color: '#00ddff', category: 'show' },
+  chalkWrite:   { name: 'Chalk Write', animation: 'chalkWrite',   color: '#88aa88', category: 'show' },
+  nameCard:     { name: 'Name Card',   animation: 'nameCard',     color: '#ffcc44', category: 'show' },
+  moulinRouge:  { name: 'Moulin Rouge',animation: 'moulinRouge',  color: '#cc2222', category: 'show' },
+  curtainDrop:  { name: 'Curtain',     animation: 'curtainDrop',  color: '#882222', category: 'show' },
+  countdown:    { name: 'Countdown',   animation: 'countdown',    color: '#ffcc44', category: 'show' },
+  confetti:     { name: 'Confetti',    animation: 'confetti',     color: '#ff66aa', category: 'show' },
+  fogDrift:     { name: 'Fog',         animation: 'fogDrift',     color: '#667788', category: 'show' },
 
   // ── VJ ──
   waves:        { name: 'Waves',         animation: 'waves',        color: '#00ccff', category: 'vj' },

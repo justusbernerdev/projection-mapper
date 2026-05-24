@@ -47,6 +47,9 @@ export function initSidebar() {
   document.getElementById('tb-remote')?.addEventListener('click', () => {
     window.open('/remote.html', 'projection-remote', 'width=400,height=700');
   });
+  document.getElementById('tb-executor')?.addEventListener('click', () => {
+    window.open('/executor.html', 'projection-executor', 'width=900,height=600');
+  });
   document.getElementById('tb-blackout')?.addEventListener('click', () => {
     state.blackout = !state.blackout;
     renderSidebar();

@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Executor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #0a0a12;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      overflow: hidden;
+    }
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    /* Top bar */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #111;
+      border-bottom: 1px solid #222;
+      flex-shrink: 0;
+    }
+    .topbar h1 {
+      font-size: 14px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      flex: 1;
+    }
+    .topbar .status {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 10px;
+    }
+    .status.connected { background: #0a3; color: #fff; }
+    .status.disconnected { background: #600; color: #faa; }
+    .page-tabs {
+      display: flex;
+      gap: 2px;
+    }
+    .page-tab {
+      padding: 4px 12px;
+      background: #1a1a2a;
+      border: 1px solid #333;
+      border-radius: 4px;
+      color: #888;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .page-tab.active {
+      background: #2a2a4a;
+      color: #fff;
+      border-color: #55a;
+    }
+
+    /* Main area */
+    .main-area {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Executor grid */
+    .executor-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      grid-auto-rows: 100px;
+      gap: 4px;
+      padding: 8px;
+      overflow-y: auto;
+      align-content: start;
+    }
+
+    /* Executor button */
+    .exec-btn {
+      position: relative;
+      border-radius: 6px;
+      border: 2px solid #333;
+      background: #1a1a2a;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: transform 0.05s, border-color 0.1s;
+      overflow: hidden;
+    }
+    .exec-btn:active {
+      transform: scale(0.95);
+    }
+    .exec-btn.active {
+      border-color: #0a0 !important;
+      box-shadow: 0 0 12px rgba(0,200,0,0.3);
+    }
+    .exec-btn.flash {
+      animation: exec-flash 0.15s;
+    }
+    @keyframes exec-flash {
+      0% { filter: brightness(2); }
+      100% { filter: brightness(1); }
+    }
+    .exec-btn .btn-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-align: center;
+      line-height: 1.2;
+      padding: 0 4px;
+      z-index: 1;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+    .exec-btn .btn-type {
+      font-size: 9px;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      z-index: 1;
+    }
+    .exec-btn .btn-key {
+      position: absolute;
+      top: 3px;
+      right: 5px;
+      font-size: 9px;
+      color: rgba(255,255,255,0.3);
+      font-family: monospace;
+    }
+    .exec-btn .color-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+    .exec-btn.empty {
+      border-style: dashed;
+      border-color: #222;
+      cursor: default;
+    }
+    .exec-btn.empty:active {
+      transform: none;
+    }
+
+    /* Fader strip */
+    .fader-strip {
+      width: 200px;
+      background: #111;
+      border-left: 1px solid #222;
+      padding: 8px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .fader-strip h3 {
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .fader-group {
+      margin-bottom: 16px;
+    }
+    .fader-label {
+      font-size: 11px;
+      color: #aaa;
+      margin-bottom: 4px;
+    }
+    .fader-group input[type="range"] {
+      width: 100%;
+      accent-color: #0af;
+    }
+    .fader-value {
+      font-size: 10px;
+      color: #666;
+      text-align: right;
+    }
+
+    /* Bottom bar — cue info + transport */
+    .bottombar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #111;
+      border-top: 1px solid #222;
+      flex-shrink: 0;
+    }
+    .cue-info {
+      flex: 1;
+      font-size: 13px;
+    }
+    .cue-info .num { color: #0b4; font-weight: bold; font-size: 18px; margin-right: 8px; }
+    .cue-info .name { color: #888; }
+    .transport-btn {
+      padding: 8px 16px;
+      border: 1px solid #333;
+      border-radius: 4px;
+      background: #1a1a2a;
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .transport-btn:active { background: #2a2a4a; }
+    .transport-btn.go { background: #0a0; font-size: 16px; padding: 8px 24px; }
+    .transport-btn.go:active { background: #080; }
+    .transport-btn.danger { background: #900; }
+    .transport-btn.danger:active { background: #700; }
+
+    /* Edit overlay */
+    .edit-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .edit-panel {
+      background: #1a1a2a;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 16px;
+      width: 340px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .edit-panel h2 { font-size: 14px; margin-bottom: 12px; }
+    .edit-panel label { display: block; font-size: 12px; color: #888; margin-top: 8px; }
+    .edit-panel select, .edit-panel input[type="text"], .edit-panel input[type="color"] {
+      width: 100%;
+      padding: 6px 8px;
+      background: #222;
+      border: 1px solid #444;
+      color: #fff;
+      border-radius: 4px;
+      font-size: 13px;
+      margin-top: 2px;
+    }
+    .edit-panel input[type="color"] { height: 32px; padding: 2px; cursor: pointer; }
+    .edit-panel .btn-row { display: flex; gap: 8px; margin-top: 16px; }
+    .edit-panel .btn-row button {
+      flex: 1; padding: 8px; border: 1px solid #444; border-radius: 4px;
+      background: #222; color: #fff; cursor: pointer; font-size: 13px;
+    }
+    .edit-panel .btn-row button.primary { background: #2255aa; border-color: #3366cc; }
+    .edit-panel .btn-row button.danger { background: #662222; border-color: #883333; }
+
+    /* Scene picker grid inside edit */
+    .scene-picker {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      margin-top: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .scene-pick-btn {
+      padding: 6px 4px;
+      border: 1px solid #333;
+      border-radius: 4px;
+      background: #1a1a2a;
+      color: #ccc;
+      cursor: pointer;
+      font-size: 10px;
+      text-align: center;
+    }
+    .scene-pick-btn:hover { border-color: #55a; }
+    .scene-pick-btn.selected { border-color: #0a0; background: #1a2a1a; }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div class="topbar">
+      <h1>Executor</h1>
+      <div class="page-tabs" id="page-tabs"></div>
+      <button class="transport-btn" id="btn-add-page" style="font-size:11px;padding:4px 8px;">+ Page</button>
+      <button class="transport-btn" id="btn-edit-mode" style="font-size:11px;padding:4px 8px;">Edit</button>
+      <div class="status disconnected" id="ws-status">Offline</div>
+    </div>
+
+    <div class="main-area">
+      <div class="executor-grid" id="executor-grid"></div>
+      <div class="fader-strip">
+        <h3>Master</h3>
+        <div class="fader-group">
+          <div class="fader-label">Intensity</div>
+          <input type="range" id="fader-intensity" min="0" max="100" value="100">
+          <div class="fader-value" id="fader-intensity-val">100%</div>
+        </div>
+        <div class="fader-group">
+          <div class="fader-label">BPM</div>
+          <input type="range" id="fader-bpm" min="40" max="200" value="120">
+          <div class="fader-value" id="fader-bpm-val">120</div>
+        </div>
+        <div class="fader-group">
+          <div class="fader-label">Fade Time</div>
+          <input type="range" id="fader-fade" min="0" max="3000" step="100" value="500">
+          <div class="fader-value" id="fader-fade-val">500ms</div>
+        </div>
+        <h3 style="margin-top:24px;">Preview</h3>
+        <canvas id="preview-canvas" width="192" height="108"
+          style="width:100%;border-radius:4px;border:1px solid #333;background:#000;"></canvas>
+      </div>
+    </div>
+
+    <div class="bottombar">
+      <div class="cue-info">
+        <span class="num" id="cue-num">—</span>
+        <span class="name" id="cue-name">No cue</span>
+      </div>
+      <button class="transport-btn" id="btn-prev">PREV</button>
+      <button class="transport-btn go" id="btn-go">GO</button>
+      <button class="transport-btn" id="btn-next">NEXT</button>
+      <button class="transport-btn danger" id="btn-blackout">BO</button>
+    </div>
+  </div>
+
+  <div class="edit-overlay" id="edit-overlay" style="display:none;"></div>
+
+  <script type="module">
+    import { Transport } from '/src/transport.js';
+
+    const transport = new Transport('executor', 'Executor 1');
+
+    // ── State ──
+    const STORAGE_KEY = 'pm-executor-config';
+    let editMode = false;
+    let activePage = 0;
+    let activeScene = null;
+    let cues = [];
+    let activeCueIndex = -1;
+    let pages = loadPages();
+
+    function defaultPages() {
+      return [
+        { name: 'Main', buttons: createDefaultButtons() },
+        { name: 'FX', buttons: createFXButtons() },
+      ];
+    }
+
+    function createDefaultButtons() {
+      const scenes = [
+        { action: 'scene', scene: 'magicReveal', label: 'Magic\nReveal', color: '#ffcc33' },
+        { action: 'scene', scene: 'glitterRain', label: 'Glitter\nRain', color: '#ffd700' },
+        { action: 'scene', scene: 'washUp', label: 'Wash Up', color: '#6644cc' },
+        { action: 'scene', scene: 'shadowWall', label: 'Shadow\nWall', color: '#554433' },
+        { action: 'scene', scene: 'dancerIntro', label: 'Dancer\nSpot', color: '#ffdd88' },
+        { action: 'scene', scene: 'blinderFlash', label: 'Blinder', color: '#ffffcc' },
+        { action: 'scene', scene: 'laserText', label: 'Laser\nText', color: '#00ff88' },
+        { action: 'scene', scene: 'wipeReveal', label: 'Wipe', color: '#00ddff' },
+        { action: 'scene', scene: 'waves', label: 'Waves', color: '#00ccff' },
+        { action: 'scene', scene: 'circles', label: 'Circles', color: '#ff0066' },
+        { action: 'scene', scene: 'tunnel', label: 'Tunnel', color: '#8800ff' },
+        { action: 'scene', scene: 'particles', label: 'Particles', color: '#00ffaa' },
+        { action: 'scene', scene: 'wall3d', label: '3D Wall', color: '#ffaa44' },
+        { action: 'scene', scene: 'sphere3d', label: '3D Sphere', color: '#8866ff' },
+        { action: 'scene', scene: 'starfield', label: 'Stars', color: '#aaaaff' },
+        { action: 'scene', scene: 'gridMorph', label: 'Grid', color: '#ffdd00' },
+        { action: 'blackout', label: 'BLACKOUT', color: '#ff0000' },
+        { action: 'restore', label: 'RESTORE', color: '#0088ff' },
+        { action: 'scene', scene: 'full', label: 'WHITE', color: '#ffffff' },
+        { action: 'scene', scene: 'strobe', label: 'Strobe', color: '#ffffff' },
+      ];
+      // Pad to 24
+      while (scenes.length < 24) scenes.push({ action: 'empty' });
+      return scenes;
+    }
+
+    function createFXButtons() {
+      const fx = [
+        { action: 'overlay', overlay: 'wipeRight', label: 'Wipe →', color: '#0088cc' },
+        { action: 'overlay', overlay: 'wipeLeft', label: '← Wipe', color: '#0088cc' },
+        { action: 'overlay', overlay: 'wipeDown', label: 'Wipe ↓', color: '#0088cc' },
+        { action: 'overlay', overlay: 'circleOpen', label: 'Circle', color: '#0088cc' },
+        { action: 'overlay', overlay: 'diagonalWipe', label: 'Diagonal', color: '#0088cc' },
+        { action: 'overlay', overlay: 'flashWhite', label: 'Flash\nWhite', color: '#ffffff' },
+        { action: 'overlay', overlay: 'flashGold', label: 'Flash\nGold', color: '#ffcc00' },
+        { action: 'overlay', overlay: 'flashBoom', label: 'BOOM', color: '#ff4400' },
+        { action: 'overlay', overlay: 'sparkleOverlay', label: 'Sparkle', color: '#aaaaff' },
+        { action: 'overlay', overlay: 'glitterOverlay', label: 'Glitter', color: '#ffd700' },
+        { action: 'overlay', overlay: 'beatPulse', label: 'Beat\nPulse', color: '#00ff88' },
+        { action: 'overlay', overlay: 'scanLine', label: 'Scan\nLine', color: '#00ccff' },
+        { action: 'overlay', overlay: 'vignette', label: 'Vignette', color: '#444444' },
+        { action: 'scene', scene: 'spotlight', label: 'Spotlight', color: '#ffeeaa' },
+        { action: 'scene', scene: 'wash', label: 'Color\nWash', color: '#ff8800' },
+        { action: 'scene', scene: 'ledPixels', label: 'LED\nPixels', color: '#ff00ff' },
+        { action: 'scene', scene: 'wallCrumble', label: 'Wall\nCrumble', color: '#aa6633' },
+        { action: 'scene', scene: 'wallShatter', label: 'Wall\nShatter', color: '#ff4444' },
+        { action: 'scene', scene: 'wallGrow', label: 'Wall\nGrow', color: '#44cc88' },
+        { action: 'scene', scene: 'wallDepth', label: 'Wall\nDepth', color: '#4488ff' },
+      ];
+      while (fx.length < 24) fx.push({ action: 'empty' });
+      return fx;
+    }
+
+    function loadPages() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (data) return JSON.parse(data);
+      } catch {}
+      return defaultPages();
+    }
+
+    function savePages() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(pages));
+    }
+
+    // ── Transport messages ──
+    transport.onMessage((msg) => {
+      switch (msg.type) {
+        case 'ws-connected':
+          document.getElementById('ws-status').textContent = 'Online';
+          document.getElementById('ws-status').className = 'status connected';
+          break;
+        case 'ws-disconnected':
+          document.getElementById('ws-status').textContent = 'Offline';
+          document.getElementById('ws-status').className = 'status disconnected';
+          break;
+        case 'cue-list-update':
+          cues = msg.cues || [];
+          activeCueIndex = msg.activeCueIndex ?? -1;
+          renderCueInfo();
+          break;
+        case 'cue-change':
+          activeCueIndex = msg.index;
+          renderCueInfo();
+          break;
+        case 'full-state':
+          if (msg.activeScene) activeScene = msg.activeScene.preset;
+          else activeScene = null;
+          renderGrid();
+          renderPreview(msg);
+          break;
+      }
+    });
+
+    // Request initial state
+    transport.send({ type: 'request-state' });
+    transport.send({ type: 'remote-request-cues' });
+
+    // ── Button actions ──
+    function fireButton(btn) {
+      if (btn.action === 'empty') return;
+
+      switch (btn.action) {
+        case 'scene':
+          transport.send({ type: 'exec-activate-scene', scene: btn.scene });
+          break;
+        case 'overlay':
+          transport.send({ type: 'exec-trigger-overlay', overlay: btn.overlay });
+          break;
+        case 'cue':
+          transport.send({ type: 'exec-fire-cue', index: btn.cueIndex });
+          break;
+        case 'blackout':
+          transport.send({ type: 'exec-blackout' });
+          break;
+        case 'restore':
+          transport.send({ type: 'exec-restore' });
+          break;
+      }
+    }
+
+    function releaseButton(btn) {
+      // Flash mode — release deactivates scene
+      if (btn.action === 'scene' && btn.flash) {
+        transport.send({ type: 'exec-deactivate-scene' });
+      }
+    }
+
+    // ── Render ──
+    function renderPageTabs() {
+      const tabs = document.getElementById('page-tabs');
+      tabs.innerHTML = pages.map((p, i) =>
+        `<div class="page-tab ${i === activePage ? 'active' : ''}" data-page="${i}">${p.name}</div>`
+      ).join('');
+      tabs.querySelectorAll('.page-tab').forEach(t => {
+        t.addEventListener('click', () => {
+          activePage = parseInt(t.dataset.page);
+          renderPageTabs();
+          renderGrid();
+        });
+      });
+    }
+
+    function renderGrid() {
+      const grid = document.getElementById('executor-grid');
+      const page = pages[activePage];
+      if (!page) return;
+
+      grid.innerHTML = page.buttons.map((btn, i) => {
+        if (btn.action === 'empty') {
+          return `<div class="exec-btn empty" data-index="${i}">
+            ${editMode ? '<span class="btn-label" style="color:#333">+</span>' : ''}
+          </div>`;
+        }
+
+        const isActive = btn.action === 'scene' && activeScene === btn.scene;
+        const bgColor = btn.color || '#333';
+        const darkBg = hexToRgba(bgColor, 0.15);
+
+        return `<div class="exec-btn ${isActive ? 'active' : ''}" data-index="${i}"
+            style="background:${darkBg};border-color:${hexToRgba(bgColor, 0.4)}">
+          <div class="color-bar" style="background:${bgColor}"></div>
+          <span class="btn-label">${(btn.label || '').replace(/\n/g, '<br>')}</span>
+          <span class="btn-type">${btn.action}</span>
+          ${btn.key ? `<span class="btn-key">${btn.key}</span>` : ''}
+        </div>`;
+      }).join('');
+
+      // Bind events
+      grid.querySelectorAll('.exec-btn').forEach(el => {
+        const idx = parseInt(el.dataset.index);
+        const btn = page.buttons[idx];
+
+        if (editMode) {
+          el.addEventListener('click', () => openEditor(idx));
+        } else {
+          el.addEventListener('mousedown', () => fireButton(btn));
+          el.addEventListener('mouseup', () => releaseButton(btn));
+          el.addEventListener('touchstart', (e) => { e.preventDefault(); fireButton(btn); });
+          el.addEventListener('touchend', (e) => { e.preventDefault(); releaseButton(btn); });
+        }
+      });
+    }
+
+    function renderCueInfo() {
+      const numEl = document.getElementById('cue-num');
+      const nameEl = document.getElementById('cue-name');
+      if (activeCueIndex >= 0 && cues[activeCueIndex]) {
+        numEl.textContent = activeCueIndex + 1;
+        nameEl.textContent = cues[activeCueIndex].name;
+      } else {
+        numEl.textContent = '—';
+        nameEl.textContent = 'No cue';
+      }
+    }
+
+    function renderPreview(state) {
+      const canvas = document.getElementById('preview-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = state.blackout ? '#000' : '#111';
+      ctx.fillRect(0, 0, 192, 108);
+
+      if (state.blackout || !state.surfaces) return;
+
+      for (const s of state.surfaces) {
+        if (!s.visible) continue;
+        const scale = 192 / 1920;
+        const tl = s.corners[0];
+        const tr = s.corners[1];
+        const br = s.corners[2];
+        const bl = s.corners[3];
+
+        ctx.beginPath();
+        ctx.moveTo(tl.x * scale, tl.y * scale);
+        ctx.lineTo(tr.x * scale, tr.y * scale);
+        ctx.lineTo(br.x * scale, br.y * scale);
+        ctx.lineTo(bl.x * scale, bl.y * scale);
+        ctx.closePath();
+
+        ctx.fillStyle = s.contentType === 'solid'
+          ? hexToRgba(s.color, s.opacity * 0.8)
+          : `rgba(40,80,200,${s.opacity * 0.5})`;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+    }
+
+    // ── Editor ──
+    function openEditor(idx) {
+      const page = pages[activePage];
+      const btn = { ...page.buttons[idx] };
+      const overlay = document.getElementById('edit-overlay');
+
+      // Scene list for picker
+      const scenes = [
+        'magicReveal','glitterRain','washUp','shadowWall','dancerIntro','blinderFlash','laserText','wipeReveal',
+        'waves','circles','tunnel','kaleidoscope','particles','gridMorph','starfield',
+        'wall3d','wallCrumble','wallGrow','wallShatter','wallDepth','sphere3d',
+        'spotlight','wash','strobe','ledPixels','strobeBlobs',
+        'blackout','full','red','blue','gold','purple',
+      ];
+      const overlays = [
+        'wipeRight','wipeLeft','wipeDown','circleOpen','diagonalWipe',
+        'flashWhite','flashGold','flashBoom',
+        'sparkleOverlay','glitterOverlay','beatPulse','scanLine','vignette',
+      ];
+
+      overlay.style.display = 'flex';
+      overlay.innerHTML = `
+        <div class="edit-panel">
+          <h2>Edit Button ${idx + 1}</h2>
+          <label>Action</label>
+          <select id="edit-action">
+            <option value="empty" ${btn.action==='empty'?'selected':''}>Empty</option>
+            <option value="scene" ${btn.action==='scene'?'selected':''}>Scene</option>
+            <option value="overlay" ${btn.action==='overlay'?'selected':''}>Overlay</option>
+            <option value="cue" ${btn.action==='cue'?'selected':''}>Fire Cue</option>
+            <option value="blackout" ${btn.action==='blackout'?'selected':''}>Blackout</option>
+            <option value="restore" ${btn.action==='restore'?'selected':''}>Restore</option>
+          </select>
+
+          <label>Label</label>
+          <input type="text" id="edit-label" value="${btn.label || ''}" placeholder="Button label">
+
+          <label>Color</label>
+          <input type="color" id="edit-color" value="${btn.color || '#333333'}">
+
+          <div id="edit-scene-section" style="display:${btn.action==='scene'?'block':'none'}">
+            <label>Scene</label>
+            <div class="scene-picker">
+              ${scenes.map(s => `<div class="scene-pick-btn ${btn.scene===s?'selected':''}" data-scene="${s}">${s}</div>`).join('')}
+            </div>
+          </div>
+
+          <div id="edit-overlay-section" style="display:${btn.action==='overlay'?'block':'none'}">
+            <label>Overlay</label>
+            <div class="scene-picker">
+              ${overlays.map(o => `<div class="scene-pick-btn ${btn.overlay===o?'selected':''}" data-overlay="${o}">${o}</div>`).join('')}
+            </div>
+          </div>
+
+          <div id="edit-cue-section" style="display:${btn.action==='cue'?'block':'none'}">
+            <label>Cue Index</label>
+            <input type="text" id="edit-cue-index" value="${btn.cueIndex ?? 0}" placeholder="0">
+          </div>
+
+          <div class="btn-row">
+            <button class="danger" id="edit-delete">Clear</button>
+            <button id="edit-cancel">Cancel</button>
+            <button class="primary" id="edit-save">Save</button>
+          </div>
+        </div>
+      `;
+
+      // Action change shows/hides sections
+      overlay.querySelector('#edit-action').addEventListener('change', (e) => {
+        overlay.querySelector('#edit-scene-section').style.display = e.target.value === 'scene' ? 'block' : 'none';
+        overlay.querySelector('#edit-overlay-section').style.display = e.target.value === 'overlay' ? 'block' : 'none';
+        overlay.querySelector('#edit-cue-section').style.display = e.target.value === 'cue' ? 'block' : 'none';
+      });
+
+      // Scene picker
+      let selectedScene = btn.scene;
+      overlay.querySelectorAll('[data-scene]').forEach(el => {
+        el.addEventListener('click', () => {
+          overlay.querySelectorAll('[data-scene]').forEach(e => e.classList.remove('selected'));
+          el.classList.add('selected');
+          selectedScene = el.dataset.scene;
+        });
+      });
+
+      // Overlay picker
+      let selectedOverlay = btn.overlay;
+      overlay.querySelectorAll('[data-overlay]').forEach(el => {
+        el.addEventListener('click', () => {
+          overlay.querySelectorAll('[data-overlay]').forEach(e => e.classList.remove('selected'));
+          el.classList.add('selected');
+          selectedOverlay = el.dataset.overlay;
+        });
+      });
+
+      // Save
+      overlay.querySelector('#edit-save').addEventListener('click', () => {
+        const action = overlay.querySelector('#edit-action').value;
+        const label = overlay.querySelector('#edit-label').value;
+        const color = overlay.querySelector('#edit-color').value;
+
+        const newBtn = { action, label, color };
+        if (action === 'scene') newBtn.scene = selectedScene;
+        if (action === 'overlay') newBtn.overlay = selectedOverlay;
+        if (action === 'cue') newBtn.cueIndex = parseInt(overlay.querySelector('#edit-cue-index').value) || 0;
+
+        page.buttons[idx] = newBtn;
+        savePages();
+        overlay.style.display = 'none';
+        renderGrid();
+      });
+
+      // Delete
+      overlay.querySelector('#edit-delete').addEventListener('click', () => {
+        page.buttons[idx] = { action: 'empty' };
+        savePages();
+        overlay.style.display = 'none';
+        renderGrid();
+      });
+
+      // Cancel
+      overlay.querySelector('#edit-cancel').addEventListener('click', () => {
+        overlay.style.display = 'none';
+      });
+    }
+
+    // ── Transport buttons ──
+    document.getElementById('btn-go').addEventListener('click', () => {
+      transport.send({ type: 'remote-go-next' });
+    });
+    document.getElementById('btn-prev').addEventListener('click', () => {
+      transport.send({ type: 'remote-go-prev' });
+    });
+    document.getElementById('btn-next').addEventListener('click', () => {
+      transport.send({ type: 'remote-go-next' });
+    });
+    document.getElementById('btn-blackout').addEventListener('click', () => {
+      transport.send({ type: 'exec-blackout' });
+    });
+
+    // Edit mode toggle
+    document.getElementById('btn-edit-mode').addEventListener('click', () => {
+      editMode = !editMode;
+      document.getElementById('btn-edit-mode').style.background = editMode ? '#553300' : '';
+      renderGrid();
+    });
+
+    // Add page
+    document.getElementById('btn-add-page').addEventListener('click', () => {
+      const name = prompt('Page name:', `Page ${pages.length + 1}`);
+      if (!name) return;
+      const buttons = [];
+      for (let i = 0; i < 24; i++) buttons.push({ action: 'empty' });
+      pages.push({ name, buttons });
+      activePage = pages.length - 1;
+      savePages();
+      renderPageTabs();
+      renderGrid();
+    });
+
+    // Faders
+    document.getElementById('fader-intensity').addEventListener('input', (e) => {
+      document.getElementById('fader-intensity-val').textContent = e.target.value + '%';
+      transport.send({ type: 'exec-set-intensity', value: parseInt(e.target.value) / 100 });
+    });
+    document.getElementById('fader-bpm').addEventListener('input', (e) => {
+      document.getElementById('fader-bpm-val').textContent = e.target.value;
+      transport.send({ type: 'exec-set-bpm', value: parseInt(e.target.value) });
+    });
+    document.getElementById('fader-fade').addEventListener('input', (e) => {
+      document.getElementById('fader-fade-val').textContent = e.target.value + 'ms';
+    });
+
+    // Poll cues
+    setInterval(() => {
+      transport.send({ type: 'remote-request-cues' });
+    }, 2000);
+
+    // ── Helpers ──
+    function hexToRgba(hex, alpha) {
+      if (!hex || hex.length < 4) return `rgba(50,50,80,${alpha})`;
+      let r, g, b;
+      if (hex.length === 4) {
+        r = parseInt(hex[1]+hex[1], 16);
+        g = parseInt(hex[2]+hex[2], 16);
+        b = parseInt(hex[3]+hex[3], 16);
+      } else {
+        r = parseInt(hex.slice(1,3), 16);
+        g = parseInt(hex.slice(3,5), 16);
+        b = parseInt(hex.slice(5,7), 16);
+      }
+      return `rgba(${r},${g},${b},${alpha})`;
+    }
+
+    // ── Init ──
+    renderPageTabs();
+    renderGrid();
+    renderCueInfo();
+  </script>
+</body>
+</html>

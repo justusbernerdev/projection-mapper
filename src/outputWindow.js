@@ -251,7 +251,7 @@ function renderSurfaceWithGroup(surface, ctx, time, groupRenders) {
 
 function renderOwnContent(surface, ctx, w, h, time) {
   switch (surface.contentType) {
-    case 'solid': ctx.fillStyle = surface.color || '#ff0066'; ctx.fillRect(0,0,w,h); break;
+    case 'solid': ctx.fillStyle = surface.color || '#000000'; ctx.fillRect(0,0,w,h); break;
     case 'animation': renderAnim(surface, ctx, w, h, time); break;
     case 'text':
       ctx.fillStyle = surface.textBgColor || '#000';
@@ -445,6 +445,31 @@ function renderAnim(s, ctx, w, h, t) {
     var px=sx,py=sy;ctx.beginPath();ctx.moveTo(px,py);for(var s=0;s<30*growth;s++){
     px+=dx*(len/30)*(0.5+Math.random()*0.5);py+=dy*(len/30)*(0.3+Math.sin(T+s+ci)*0.4);ctx.lineTo(px,py);}
     ctx.strokeStyle='hsla(90,40%,25%,0.6)';ctx.lineWidth=2;ctx.stroke();}
+  } else if(p==='wallCrumble'){
+    ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);var cols=10,rows=6;var bw2=w/cols,bh2=h/rows;var cycle=6;var ph3=(T%cycle)/cycle;
+    for(var r=0;r<rows;r++){var off=(r%2)*bw2*0.5;for(var c=0;c<cols+1;c++){var bx=c*bw2+off-bw2*0.25;var by=r*bh2;
+    var fd=r*0.08+Math.sin(c*2.3)*0.05;var fp=Math.max(0,Math.min(1,(ph3-fd)*3));if(fp>=1)continue;
+    var fy=fp>0?fp*fp*h*1.2:0;var al=fp>0?1-fp*0.5:1;
+    ctx.fillStyle='hsla(25,50%,'+(35+(1-r/rows)*15)+'%,'+al*0.9+')';ctx.fillRect(bx+2,by+fy+2,bw2-4,bh2-4);}}
+  } else if(p==='wallGrow'){
+    ctx.fillStyle='rgba(0,0,0,0.03)';ctx.fillRect(0,0,w,h);
+    for(var v=0;v<6;v++){var sx=(v/6)*w+w*0.08;var mL=h*0.8*Math.min(1,(T*0.05+v*0.2)%2);
+    ctx.beginPath();ctx.moveTo(sx,h);var px=sx,py=h;for(var s=0;s<40;s++){if(s/40>mL/(h*0.8))break;
+    px=sx+Math.sin(T*0.5+s*0.3+v*2)*15*(s/40)+Math.sin(s*0.7+v)*10;py=h-(s/40)*h*0.8;ctx.lineTo(px,py);}
+    ctx.strokeStyle='hsla(90,35%,25%,0.5)';ctx.lineWidth=2;ctx.stroke();}
+  } else if(p==='wallShatter'){
+    ctx.fillStyle='rgba(0,0,0,0.15)';ctx.fillRect(0,0,w,h);var cx=w/2,cy=h/2;var cycle=5;var ph4=(T%cycle)/cycle;
+    if(ph4<0.1){var fl=1-ph4/0.1;ctx.fillStyle='rgba(255,255,255,'+fl*0.5+')';ctx.fillRect(0,0,w,h);}
+    for(var i=0;i<30;i++){var seed=i*137.508;var a=(i/30)*Math.PI*2;var sp=0.3+(seed%100)/100*0.7;var sp2=Math.max(0,ph4-0.05);
+    var d=sp2*sp*Math.max(w,h)*0.8;if(d<1)continue;var px=cx+Math.cos(a)*d;var py=cy+Math.sin(a)*d+sp2*sp2*50;
+    var al=Math.max(0,1-sp2*1.5);if(al<0.05)continue;var sz=w*0.015+(seed%20)*0.4;
+    ctx.fillStyle='hsla('+((200+seed*0.5)%360)+',20%,'+(45+(seed%20))+'%,'+al*0.7+')';ctx.fillRect(px-sz/2,py-sz/2,sz,sz);}
+  } else if(p==='wallDepth'){
+    ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);var cols=12,rows=7;var bw2=w/cols,bh2=h/rows;
+    for(var r=0;r<rows;r++){var off=(r%2)*bw2*0.4;for(var c=0;c<cols+1;c++){var bx=c*bw2+off-bw2*0.2;var by=r*bh2;
+    var dist=Math.sqrt(Math.pow((bx+bw2/2)/w-0.5,2)+Math.pow((by+bh2/2)/h-0.5,2));var depth=Math.sin(dist*8-T*2)*0.5+0.5;
+    var hv=(30+depth*20+T*10)%60;var lt=25+depth*40;
+    ctx.fillStyle='hsla('+hv+',50%,'+lt+'%,0.95)';ctx.fillRect(bx+1,by+1,bw2-2,bh2-2);}}
   } else if(p==='laserText'){
     ctx.fillStyle='rgba(0,0,0,0.06)';ctx.fillRect(0,0,w,h);
     var text='YSIEN TANSSIT';var sub='2026';var fs=Math.min(w*0.09,h*0.22);var ss=fs*0.7;

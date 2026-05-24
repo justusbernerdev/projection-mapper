@@ -1,0 +1,202 @@
+{
+  "show": "Ysien Tanssit 2026",
+  "theme": "Showtime — There's a little bit magic in the air",
+  "cues": [
+    {
+      "id": 1,
+      "name": "Countdown",
+      "scene": "countdown",
+      "note": "Countdown-kello seinalla ennen shown alkua"
+    },
+    {
+      "id": 2,
+      "name": "Blackout - Start",
+      "scene": "blackout",
+      "note": "Valot pois, usva taytetaan"
+    },
+    {
+      "id": 3,
+      "name": "Curtain Rise",
+      "scene": "curtainDrop",
+      "note": "Verhot avautuvat seinalla"
+    },
+    {
+      "id": 4,
+      "name": "SHOWTIME",
+      "scene": "laserText",
+      "note": "Laser kirjoittaa YSIEN TANSSIT 2026"
+    },
+    {
+      "id": 5,
+      "name": "Magic Reveal",
+      "scene": "magicReveal",
+      "note": "Samu taikasauva, glitter-efekti"
+    },
+    {
+      "id": 6,
+      "name": "Moulin Rouge",
+      "scene": "moulinRouge",
+      "note": "Taustateema kaynnistyy"
+    },
+    {
+      "id": 7,
+      "name": "Fog + Wash",
+      "scene": "washUp",
+      "note": "Wash-valot + usva"
+    },
+
+    {
+      "id": 10,
+      "name": "Nora, Aatu, Olivia, Taavi, Iita, Eeli",
+      "scene": "nameCard",
+      "text": "Nora & Aatu\nOlivia & Taavi\nIita & Eeli",
+      "note": "Ensimmainen tanssipari"
+    },
+    {
+      "id": 11,
+      "name": "Mea, Lenni K, Neela, Antto",
+      "scene": "nameCard",
+      "text": "Mea & Lenni K\nNeela & Antto"
+    },
+    {
+      "id": 12,
+      "name": "Aava J, Fiia, Minea, Oskar",
+      "scene": "nameCard",
+      "text": "Aava J & Fiia\nMinea & Oskar"
+    },
+    {
+      "id": 13,
+      "name": "Hertta, Niklas, Sini, Sampo, Hetta",
+      "scene": "nameCard",
+      "text": "Hertta & Niklas\nSini, Sampo & Hetta"
+    },
+    {
+      "id": 14,
+      "name": "Rosa, Oliver, Ava, Luka",
+      "scene": "nameCard",
+      "text": "Rosa & Oliver\nAva & Luka"
+    },
+    {
+      "id": 15,
+      "name": "Saaga S, Sten, Pinja, Leo",
+      "scene": "nameCard",
+      "text": "Saaga S & Sten\nPinja & Leo"
+    },
+    {
+      "id": 16,
+      "name": "Samu, Laura, Rasmus, Saaga P",
+      "scene": "nameCard",
+      "text": "Samu & Laura\nRasmus & Saaga P"
+    },
+    {
+      "id": 17,
+      "name": "Emilia, Linus, Anni, Alex",
+      "scene": "nameCard",
+      "text": "Emilia & Linus\nAnni & Alex"
+    },
+    {
+      "id": 18,
+      "name": "Adele, Luukas K, Severi, Tinka",
+      "scene": "nameCard",
+      "text": "Adele & Luukas K\nSeveri & Tinka"
+    },
+    {
+      "id": 19,
+      "name": "Veronica, Lenni S, Daniel, Eevi",
+      "scene": "nameCard",
+      "text": "Veronica & Lenni S\nDaniel & Eevi"
+    },
+    {
+      "id": 20,
+      "name": "Inka, Sofia, Jessi, Lotte",
+      "scene": "nameCard",
+      "text": "Inka & Sofia\nJessi & Lotte"
+    },
+    {
+      "id": 21,
+      "name": "Arina, Luiza, Paphatson, Thanaphon",
+      "scene": "nameCard",
+      "text": "Arina & Luiza\nPaphatson & Thanaphon"
+    },
+    {
+      "id": 22,
+      "name": "Fanny, Taru, Teemu, Sisi, Nelli, Akseli",
+      "scene": "nameCard",
+      "text": "Fanny, Taru & Teemu\nSisi, Nelli & Akseli"
+    },
+    {
+      "id": 23,
+      "name": "Peppi, Thomas, Vera, Eemil",
+      "scene": "nameCard",
+      "text": "Peppi & Thomas\nVera & Eemil"
+    },
+
+    {
+      "id": 30,
+      "name": "Tanssit - Waves",
+      "scene": "waves",
+      "note": "Tausta tanssien aikana"
+    },
+    {
+      "id": 31,
+      "name": "Tanssit - Circles",
+      "scene": "circles",
+      "note": "Vaihtoehtoinen tausta"
+    },
+    {
+      "id": 32,
+      "name": "Tanssit - Wall Effect",
+      "scene": "wall3d",
+      "note": "3D seina-efekti"
+    },
+    {
+      "id": 33,
+      "name": "Tanssit - Stars",
+      "scene": "starfield",
+      "note": "Tahtikentta"
+    },
+    {
+      "id": 34,
+      "name": "Tanssit - Spotlight",
+      "scene": "spotlight",
+      "note": "Spottivalo sooloja varten"
+    },
+
+    {
+      "id": 40,
+      "name": "Chalk: Kiitos!",
+      "scene": "chalkWrite",
+      "note": "Liitutaulu-kiitos"
+    },
+    {
+      "id": 41,
+      "name": "Confetti - Finale",
+      "scene": "confetti",
+      "note": "Konfetti putoaa"
+    },
+    {
+      "id": 42,
+      "name": "Glitter Rain - Finale",
+      "scene": "glitterRain",
+      "note": "Glitter-sade loppuun"
+    },
+    {
+      "id": 43,
+      "name": "Wall Shatter - End",
+      "scene": "wallShatter",
+      "note": "Seina hajoaa"
+    },
+    {
+      "id": 44,
+      "name": "Curtain Close",
+      "scene": "curtainDrop",
+      "note": "Verhot sulkeutuvat"
+    },
+    {
+      "id": 45,
+      "name": "Blackout - End",
+      "scene": "blackout",
+      "note": "Loppu"
+    }
+  ]
+}

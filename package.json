@@ -4,10 +4,15 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "server": "node server.js",
+    "start": "node server.js & vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
     "vite": "^8.0.14"
+  },
+  "dependencies": {
+    "ws": "^8.21.0"
   }
 }

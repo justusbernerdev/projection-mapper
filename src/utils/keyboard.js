@@ -16,8 +16,8 @@ export function initKeyboard() {
       return;
     }
 
-    // Program mode handles its own keys first
-    if (state.mode === 'program' && handleProgramKey(e)) return;
+    // GO mode handles executor keys
+    if (state.mode === 'go' && handleProgramKey(e)) return;
 
     switch (e.key) {
       case 'Tab':
@@ -114,7 +114,7 @@ export function toggle() {
   const indicator = document.getElementById('mode-indicator');
 
   // Exit previous mode
-  if (prevMode === 'program') {
+  if (prevMode === 'program' || prevMode === 'go') {
     exitProgramMode();
   }
 
@@ -124,18 +124,30 @@ export function toggle() {
     document.getElementById('right-panel')?.classList.remove('hidden');
     if (indicator) {
       indicator.className = 'tb-mode edit';
-      indicator.textContent = 'EDIT';
+      indicator.textContent = 'SETUP';
     }
     state.uiVisible = true;
   } else if (state.mode === 'program') {
+    // PROGRAM = ohjelmointi, ei lähetä mitään liveen
     document.body.classList.remove('performance-mode');
+    document.getElementById('left-panel')?.classList.remove('hidden');
+    document.getElementById('right-panel')?.classList.remove('hidden');
     if (indicator) {
       indicator.className = 'tb-mode program';
       indicator.textContent = 'PROGRAM';
     }
     state.uiVisible = true;
-    enterProgramMode();
+  } else if (state.mode === 'go') {
+    // GO = executor konsoli, live-ohjaus
+    document.body.classList.remove('performance-mode');
+    if (indicator) {
+      indicator.className = 'tb-mode go';
+      indicator.textContent = 'GO';
+    }
+    state.uiVisible = true;
+    enterProgramMode(); // uses the executor panel
   } else {
+    // LIVE = kaikki piilossa
     document.body.classList.add('performance-mode');
     if (indicator) {
       indicator.className = 'tb-mode performance';

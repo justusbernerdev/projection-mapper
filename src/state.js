@@ -1,7 +1,7 @@
 // App state — single source of truth
 
 export const state = {
-  mode: 'edit', // 'edit' (SETUP) | 'program' (PROGRAM) | 'performance' (GO/LIVE)
+  mode: 'edit', // 'edit' (SETUP) | 'program' (PROGRAM) | 'go' (GO/executor) | 'performance' (LIVE/blackout UI)
   surfaces: [],
   selectedSurfaceId: null,
   selectedSurfaceIds: [], // multi-select
@@ -65,7 +65,7 @@ export function selectSurface(id, addToSelection = false) {
 }
 
 export function toggleMode() {
-  const modes = ['edit', 'program', 'performance'];
+  const modes = ['edit', 'program', 'go', 'performance'];
   const idx = modes.indexOf(state.mode);
   state.mode = modes[(idx + 1) % modes.length];
 }

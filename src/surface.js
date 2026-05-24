@@ -23,8 +23,8 @@ export function createSurface(overrides = {}) {
       { x: cx + w / 2, y: cy + h / 2 }, // bottom-right
       { x: cx - w / 2, y: cy + h / 2 }, // bottom-left
     ],
-    contentType: 'solid', // solid | image | video | drawing | animation
-    color: '#ff0066',
+    contentType: 'solid',
+    color: '#000000',
     opacity: 1,
     brightness: 1,
     visible: true,

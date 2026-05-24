@@ -123,6 +123,7 @@
     .tb-mode:hover { filter: brightness(1.3); }
     .tb-mode.edit { background: var(--accent-dim); color: var(--accent); }
     .tb-mode.program { background: rgba(160,80,255,0.2); color: #a050ff; }
+    .tb-mode.go { background: rgba(0,200,80,0.2); color: var(--green); }
     .tb-mode.performance { background: rgba(255,50,50,0.2); color: var(--red); }
     .tp-item {
       padding: 5px 14px;
@@ -606,6 +607,75 @@
       color: rgba(255,255,255,0.4);
     }
 
+    /* ── EXECUTOR GRID ── */
+    .prog-executor-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 4px;
+      padding: 8px;
+      flex: 1;
+      overflow-y: auto;
+      align-content: start;
+    }
+    .prog-exec-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      height: 56px;
+      border: 2px solid color-mix(in srgb, var(--exec-color) 40%, transparent);
+      border-radius: 5px;
+      background: color-mix(in srgb, var(--exec-color) 8%, transparent);
+      cursor: pointer;
+      transition: all 0.1s;
+      padding: 4px;
+    }
+    .prog-exec-btn:hover {
+      background: color-mix(in srgb, var(--exec-color) 18%, transparent);
+      transform: scale(1.03);
+    }
+    .prog-exec-btn:active {
+      transform: scale(0.97);
+      background: color-mix(in srgb, var(--exec-color) 30%, transparent);
+    }
+    .prog-exec-btn.active {
+      border-color: var(--green);
+      box-shadow: 0 0 10px rgba(0,200,80,0.4), inset 0 0 8px rgba(0,200,80,0.1);
+    }
+    .prog-exec-key {
+      font-size: 9px;
+      color: rgba(255,255,255,0.35);
+      font-family: monospace;
+    }
+    .prog-exec-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #ddd;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    /* Page tabs */
+    .prog-page-tab {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 3px 10px;
+      font-size: 11px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .prog-page-tab:hover { background: rgba(255,255,255,0.08); }
+    .prog-page-tab.active {
+      background: rgba(160,80,255,0.15);
+      border-color: rgba(160,80,255,0.4);
+      color: #b464ff;
+    }
+
     /* ── PROGRAM TARGET LIST ── */
     .prog-target {
       display: flex;
@@ -673,6 +743,7 @@
         <div class="tb-sep"></div>
         <button class="tb-btn" id="tb-output" title="Open output window">Output</button>
         <button class="tb-btn" id="tb-remote" title="Open remote control">Remote</button>
+        <button class="tb-btn" id="tb-executor" title="Open executor">Executor</button>
         <div class="tb-sep"></div>
         <button class="tb-btn" id="tb-grid" title="Toggle grid">Grid</button>
         <div class="tb-sep"></div>

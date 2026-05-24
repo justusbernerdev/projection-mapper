@@ -8,6 +8,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         output: resolve(__dirname, 'output.html'),
         remote: resolve(__dirname, 'remote.html'),
+        executor: resolve(__dirname, 'executor.html'),
       },
     },
   },

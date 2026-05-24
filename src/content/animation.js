@@ -1177,6 +1177,430 @@ const presets = {
       ctx.fillRect(0, 0, Math.min(wipePos, w), h);
     }
   },
+
+  // ══════════════════════════════════════
+  // CHALKBOARD TEXT EFFECTS
+  // ══════════════════════════════════════
+
+  chalkWrite(ctx, w, h, t) {
+    // Dark green chalkboard with chalk-written text
+    // Uses surface.textContent if available, otherwise default
+    ctx.fillStyle = 'rgba(13,24,20,0.08)';
+    ctx.fillRect(0, 0, w, h);
+    const time = t / 1000;
+
+    // Chalkboard base (first frame only via alpha check)
+    if (time % 10 < 0.02) {
+      ctx.fillStyle = '#1a2e23';
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    const text = 'SHOWTIME';
+    const sub = "There's a little bit magic in the air";
+    const fontSize = Math.min(w * 0.12, h * 0.25);
+    const subSize = fontSize * 0.3;
+    const cx = w / 2, cy = h / 2;
+
+    // Chalk texture via noise displacement simulation
+    const cycle = 8;
+    const phase = time % cycle;
+    const writeProgress = Math.min(1, phase / 3);
+    const holdAlpha = phase > 3 ? Math.min(1, (phase - 3)) : writeProgress;
+    const fadeOut = phase > cycle - 1.5 ? Math.max(0, (cycle - phase) / 1.5) : 1;
+
+    // Clip for write-in effect
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(0, 0, w * writeProgress, h);
+    ctx.clip();
+
+    // Main text — chalk style: rough edges, slight transparency
+    ctx.font = `bold ${fontSize}px 'Georgia', serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // Multiple passes for chalk look
+    for (let pass = 0; pass < 3; pass++) {
+      const offsetX = (Math.sin(pass * 7 + time) * 0.5);
+      const offsetY = (Math.cos(pass * 5 + time) * 0.5);
+      const alpha = (pass === 0 ? 0.9 : 0.15) * holdAlpha * fadeOut;
+      ctx.fillStyle = `rgba(245,245,240,${alpha})`;
+      ctx.fillText(text, cx + offsetX, cy - subSize * 0.8 + offsetY);
+    }
+
+    // Subtitle
+    ctx.font = `italic ${subSize}px 'Georgia', serif`;
+    for (let pass = 0; pass < 2; pass++) {
+      const alpha = (pass === 0 ? 0.7 : 0.1) * holdAlpha * fadeOut;
+      ctx.fillStyle = `rgba(245,245,240,${alpha})`;
+      ctx.fillText(sub, cx, cy + fontSize * 0.5);
+    }
+
+    ctx.restore();
+
+    // Chalk dust particles falling from text
+    if (phase < 3.5) {
+      const dustX = w * writeProgress;
+      for (let i = 0; i < 3; i++) {
+        const dx = dustX + (Math.random() - 0.5) * 20;
+        const dy = cy + (Math.random() - 0.5) * fontSize;
+        const size = 1 + Math.random() * 1.5;
+        const life = Math.random();
+        ctx.fillStyle = `rgba(245,245,240,${life * 0.4})`;
+        ctx.beginPath();
+        ctx.arc(dx, dy + life * 30, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  },
+
+  nameCard(ctx, w, h, t) {
+    // Elegant name card — for dancer introductions
+    ctx.fillStyle = 'rgba(0,0,0,0.06)';
+    ctx.fillRect(0, 0, w, h);
+    const time = t / 1000;
+    const cx = w / 2, cy = h / 2;
+
+    // Gold ornamental frame
+    const pad = w * 0.06;
+    const frameW = w - pad * 2;
+    const frameH = h * 0.5;
+    const frameY = cy - frameH / 2;
+
+    // Frame glow
+    const glowAlpha = 0.1 + Math.sin(time * 2) * 0.03;
+    ctx.strokeStyle = `rgba(255,200,50,${glowAlpha})`;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(pad, frameY, frameW, frameH);
+
+    // Ornamental corners
+    const cs = w * 0.05;
+    const cornerPairs = [
+      [pad, frameY, 1, 1], [pad + frameW, frameY, -1, 1],
+      [pad, frameY + frameH, 1, -1], [pad + frameW, frameY + frameH, -1, -1],
+    ];
+    ctx.strokeStyle = `rgba(255,200,50,${0.25 + Math.sin(time * 3) * 0.05})`;
+    ctx.lineWidth = 2;
+    for (const [x, y, dx, dy] of cornerPairs) {
+      ctx.beginPath();
+      ctx.moveTo(x, y + dy * cs);
+      ctx.lineTo(x, y);
+      ctx.lineTo(x + dx * cs, y);
+      ctx.stroke();
+      // Decorative curl
+      ctx.beginPath();
+      ctx.arc(x + dx * cs * 0.3, y + dy * cs * 0.3, cs * 0.15, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(255,200,50,${0.15})`;
+      ctx.stroke();
+    }
+
+    // Horizontal divider line
+    ctx.strokeStyle = `rgba(255,200,50,${0.15})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad + frameW * 0.2, cy + h * 0.02);
+    ctx.lineTo(pad + frameW * 0.8, cy + h * 0.02);
+    ctx.stroke();
+
+    // Central spotlight glow
+    const spotGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, w * 0.25);
+    spotGrad.addColorStop(0, 'rgba(255,220,150,0.06)');
+    spotGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = spotGrad;
+    ctx.fillRect(0, 0, w, h);
+
+    // Sparkles around frame
+    for (let i = 0; i < 6; i++) {
+      const angle = (i / 6) * Math.PI * 2 + time * 0.4;
+      const dist = Math.min(frameW, frameH) * 0.55;
+      const sx = cx + Math.cos(angle) * dist;
+      const sy = cy + Math.sin(angle) * dist * 0.6;
+      const sparkle = Math.sin(time * 5 + i * 4) * 0.5 + 0.5;
+      if (sparkle > 0.5) {
+        ctx.save();
+        ctx.translate(sx, sy);
+        ctx.rotate(time * 2 + i);
+        ctx.fillStyle = `rgba(255,200,100,${(sparkle - 0.5) * 0.8})`;
+        ctx.fillRect(-0.5, -4, 1, 8);
+        ctx.fillRect(-4, -0.5, 8, 1);
+        ctx.restore();
+      }
+    }
+  },
+
+  moulinRouge(ctx, w, h, t) {
+    // Moulin Rouge theme — red cabaret vibes
+    ctx.fillStyle = 'rgba(0,0,0,0.08)';
+    ctx.fillRect(0, 0, w, h);
+    const time = t / 1000;
+    const cx = w / 2, cy = h / 2;
+    const b = beat();
+
+    // Rotating windmill blades
+    const blades = 4;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(time * 0.5);
+    for (let i = 0; i < blades; i++) {
+      ctx.save();
+      ctx.rotate((i / blades) * Math.PI * 2);
+      // Blade shape
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(-w * 0.03, -w * 0.2);
+      ctx.lineTo(w * 0.03, -w * 0.2);
+      ctx.closePath();
+      const alpha = 0.2 + (1 - b) * 0.1;
+      ctx.fillStyle = `rgba(200,30,30,${alpha})`;
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+
+    // Center circle
+    ctx.beginPath();
+    ctx.arc(cx, cy, w * 0.04, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(200,30,30,${0.4 + (1 - b) * 0.2})`;
+    ctx.fill();
+
+    // Outer ring of lights
+    const numLights = 16;
+    for (let i = 0; i < numLights; i++) {
+      const angle = (i / numLights) * Math.PI * 2 + time * 0.2;
+      const dist = Math.min(w, h) * 0.35;
+      const lx = cx + Math.cos(angle) * dist;
+      const ly = cy + Math.sin(angle) * dist;
+      const lit = Math.sin(time * 4 + i * 1.2) > 0;
+      const size = w * 0.012;
+
+      ctx.beginPath();
+      ctx.arc(lx, ly, size, 0, Math.PI * 2);
+      ctx.fillStyle = lit
+        ? `rgba(255,200,50,${0.7 + (1 - b) * 0.3})`
+        : 'rgba(100,50,20,0.3)';
+      ctx.fill();
+
+      if (lit) {
+        ctx.beginPath();
+        ctx.arc(lx, ly, size * 2.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,200,50,0.08)';
+        ctx.fill();
+      }
+    }
+
+    // Red curtain gradient on sides
+    const curtainW = w * 0.08;
+    const leftCurtain = ctx.createLinearGradient(0, 0, curtainW, 0);
+    leftCurtain.addColorStop(0, 'rgba(120,15,15,0.3)');
+    leftCurtain.addColorStop(1, 'transparent');
+    ctx.fillStyle = leftCurtain;
+    ctx.fillRect(0, 0, curtainW, h);
+
+    const rightCurtain = ctx.createLinearGradient(w, 0, w - curtainW, 0);
+    rightCurtain.addColorStop(0, 'rgba(120,15,15,0.3)');
+    rightCurtain.addColorStop(1, 'transparent');
+    ctx.fillStyle = rightCurtain;
+    ctx.fillRect(w - curtainW, 0, curtainW, h);
+  },
+
+  // ══════════════════════════════════════
+  // THEATRE / EVENT EFFECTS
+  // ══════════════════════════════════════
+
+  curtainDrop(ctx, w, h, t) {
+    // Red theatre curtains that fall/open
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, w, h);
+    const time = t / 1000;
+    const cycle = 10;
+    const phase = time % cycle;
+
+    // Curtain state: 0-3 = closed, 3-5 = opening, 5-8 = open, 8-10 = closing
+    let openAmount;
+    if (phase < 3) openAmount = 0;
+    else if (phase < 5) openAmount = (phase - 3) / 2;
+    else if (phase < 8) openAmount = 1;
+    else openAmount = 1 - (phase - 8) / 2;
+
+    openAmount = openAmount * openAmount * (3 - 2 * openAmount); // smoothstep
+
+    const curtainW = (w / 2) * (1 - openAmount);
+    const folds = 8;
+
+    // Left curtain
+    for (let f = 0; f < folds; f++) {
+      const foldX = (f / folds) * curtainW;
+      const foldW = curtainW / folds;
+      const depth = Math.sin((f / folds) * Math.PI) * 0.3;
+      const shade = 0.6 + depth * 0.4;
+
+      const grad = ctx.createLinearGradient(foldX, 0, foldX + foldW, 0);
+      grad.addColorStop(0, `rgba(${Math.round(140 * shade)},${Math.round(15 * shade)},${Math.round(15 * shade)},1)`);
+      grad.addColorStop(0.5, `rgba(${Math.round(180 * shade)},${Math.round(25 * shade)},${Math.round(25 * shade)},1)`);
+      grad.addColorStop(1, `rgba(${Math.round(120 * shade)},${Math.round(12 * shade)},${Math.round(12 * shade)},1)`);
+      ctx.fillStyle = grad;
+      ctx.fillRect(foldX, 0, foldW + 1, h);
+    }
+
+    // Right curtain
+    for (let f = 0; f < folds; f++) {
+      const foldX = w - curtainW + (f / folds) * curtainW;
+      const foldW = curtainW / folds;
+      const depth = Math.sin((f / folds) * Math.PI) * 0.3;
+      const shade = 0.6 + depth * 0.4;
+
+      const grad = ctx.createLinearGradient(foldX, 0, foldX + foldW, 0);
+      grad.addColorStop(0, `rgba(${Math.round(120 * shade)},${Math.round(12 * shade)},${Math.round(12 * shade)},1)`);
+      grad.addColorStop(0.5, `rgba(${Math.round(180 * shade)},${Math.round(25 * shade)},${Math.round(25 * shade)},1)`);
+      grad.addColorStop(1, `rgba(${Math.round(140 * shade)},${Math.round(15 * shade)},${Math.round(15 * shade)},1)`);
+      ctx.fillStyle = grad;
+      ctx.fillRect(foldX, 0, foldW + 1, h);
+    }
+
+    // Gold trim at top
+    ctx.fillStyle = 'rgba(200,160,50,0.15)';
+    ctx.fillRect(0, 0, w, h * 0.03);
+
+    // Tassel
+    if (curtainW > 10) {
+      ctx.fillStyle = 'rgba(200,160,50,0.3)';
+      ctx.beginPath();
+      ctx.arc(curtainW, h * 0.3, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(w - curtainW, h * 0.3, 8, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  },
+
+  countdown(ctx, w, h, t) {
+    // Countdown clock — shows time until event
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.fillRect(0, 0, w, h);
+    const time = t / 1000;
+    const cx = w / 2, cy = h / 2;
+
+    // Target: configurable, default 60 seconds repeating
+    const totalSeconds = 60;
+    const remaining = totalSeconds - (time % (totalSeconds + 3));
+    const isFinished = remaining <= 0;
+
+    if (isFinished) {
+      // Flash "SHOWTIME!"
+      const flash = Math.sin(time * 6) * 0.3 + 0.7;
+      ctx.font = `bold ${w * 0.1}px 'Georgia', serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = `rgba(255,200,50,${flash})`;
+      ctx.fillText('SHOWTIME', cx, cy);
+
+      // Glow
+      ctx.shadowBlur = 30;
+      ctx.shadowColor = `rgba(255,200,50,${flash * 0.5})`;
+      ctx.fillText('SHOWTIME', cx, cy);
+      ctx.shadowBlur = 0;
+      return;
+    }
+
+    const mins = Math.floor(remaining / 60);
+    const secs = Math.floor(remaining % 60);
+    const timeStr = `${mins}:${secs.toString().padStart(2, '0')}`;
+
+    // Clock circle
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.min(w, h) * 0.3, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,200,50,0.15)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Progress arc
+    const progress = 1 - (remaining / totalSeconds);
+    ctx.beginPath();
+    ctx.arc(cx, cy, Math.min(w, h) * 0.3, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+    ctx.strokeStyle = `rgba(255,200,50,${0.4 + Math.sin(time * 2) * 0.1})`;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    // Time text
+    ctx.font = `bold ${w * 0.12}px monospace`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = remaining < 10
+      ? `rgba(255,${100 + Math.sin(time * 4) * 100},50,0.9)`
+      : 'rgba(255,255,255,0.85)';
+    ctx.fillText(timeStr, cx, cy);
+
+    // Label
+    ctx.font = `${w * 0.025}px 'Georgia', serif`;
+    ctx.fillStyle = 'rgba(255,200,50,0.4)';
+    ctx.fillText('SHOW STARTS IN', cx, cy - Math.min(w, h) * 0.22);
+
+    // Tick marks
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
+      const r = Math.min(w, h) * 0.3;
+      const inner = r - 8;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(angle) * inner, cy + Math.sin(angle) * inner);
+      ctx.lineTo(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
+      ctx.strokeStyle = 'rgba(255,200,50,0.2)';
+      ctx.lineWidth = i % 3 === 0 ? 2 : 1;
+      ctx.stroke();
+    }
+  },
+
+  confetti(ctx, w, h, t) {
+    // Confetti / streamers falling
+    ctx.fillStyle = 'rgba(0,0,0,0.04)';
+    ctx.fillRect(0, 0, w, h);
+    const time = t / 1000;
+    const colors = ['#ff6b6b','#ffd93d','#6bcb77','#4d96ff','#ff6bcb','#fff'];
+
+    for (let i = 0; i < 50; i++) {
+      const seed = i * 73.7;
+      const x = (seed * 3.1 + Math.sin(time * 0.5 + i) * 30) % w;
+      const speed = 40 + (seed % 60);
+      const y = (time * speed + seed * 5) % (h + 40) - 20;
+      const rotation = time * 3 + seed;
+      const size = 4 + (seed % 6);
+      const color = colors[i % colors.length];
+      const wobble = Math.sin(time * 2 + seed) * 15;
+
+      ctx.save();
+      ctx.translate(x + wobble, y);
+      ctx.rotate(rotation);
+
+      // Rectangle confetti piece
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.8;
+      ctx.fillRect(-size / 2, -size / 4, size, size / 2);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+  },
+
+  fogDrift(ctx, w, h, t) {
+    // Slow fog/mist drifting across
+    ctx.fillStyle = 'rgba(0,0,0,0.02)';
+    ctx.fillRect(0, 0, w, h);
+    const time = t / 1000;
+
+    for (let layer = 0; layer < 4; layer++) {
+      const speed = 15 + layer * 8;
+      const baseX = (time * speed + layer * 300) % (w * 2) - w * 0.5;
+      const baseY = h * (0.3 + layer * 0.15);
+      const cloudW = w * 0.4 + layer * w * 0.1;
+      const cloudH = h * 0.15 + layer * h * 0.05;
+      const alpha = 0.03 + layer * 0.008;
+
+      const grad = ctx.createRadialGradient(baseX, baseY, 0, baseX, baseY, cloudW);
+      grad.addColorStop(0, `rgba(200,200,220,${alpha})`);
+      grad.addColorStop(0.5, `rgba(180,180,200,${alpha * 0.5})`);
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.fillRect(baseX - cloudW, baseY - cloudH, cloudW * 2, cloudH * 2);
+    }
+  },
 };
 
 export const animationPresetNames = Object.keys(presets);
