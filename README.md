@@ -6,6 +6,10 @@ Built with vanilla JavaScript and Vite. No frameworks, no build dependencies bey
 
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 
+## System architecture
+
+![Architecture diagram](docs/architecture.svg)
+
 ## Features
 
 - **Surface mapping** — create surfaces and drag corners to fit any projection target. Uses CSS `matrix3d` homography to warp content in real time.
