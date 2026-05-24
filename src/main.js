@@ -94,6 +94,10 @@ function handleCommand(msg) {
       gotoCue(msg.index);
       renderSidebar();
       break;
+    case 'exec-set-test-pattern':
+      state.activeTestPattern = msg.pattern || null;
+      renderSidebar();
+      break;
   }
 }
 

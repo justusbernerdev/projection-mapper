@@ -88,6 +88,7 @@ function handleMessage(sender, msg) {
     case 'exec-restore':
     case 'exec-flash-scene':
     case 'exec-release-scene':
+    case 'exec-set-test-pattern':
       broadcast(msg, sender, ['control']);
       break;
 
